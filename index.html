@@ -3,28 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="5"> <!-- Atualiza a página a cada 5 segundos -->
-    <title>S A M E   D I G I T A L</title>
+    <title>Atualização de Planilha</title>
 </head>
 <body>
-    <p>Hora atual: <span id="hora"></span></p>
-
-    <!-- Incorporação da planilha do Google Sheets -->
-    <iframe 
-        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSBaMmjtdXueRfXxmhgcKIKMyOIgAsP0JOraxxlcoLZXJX-EpdFKw_vzhEgbZVOict6gdnaDT1twJjR/pubhtml?gid=752403611&single=true" 
-        width="100%" 
-        height="1000px"
-        frameborder="0">
-    </iframe>
+    <h1>Dados da Planilha</h1>
+    <table border="1">
+        <thead>
+            <tr id="cabecalho"></tr>
+        </thead>
+        <tbody id="dados"></tbody>
+    </table>
+    
+    <button onclick="atualizarConteudo()">Atualizar Dados</button>
 
     <script>
-        function atualizarHora() {
-            const agora = new Date();
-            document.getElementById("hora").textContent = agora.toLocaleTimeString();
+        async function atualizarConteudo() {
+            try {
+                let url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBaMmjtdXueRfXxmhgcKIKMyOIgAsP0JOraxxlcoLZXJX-EpdFKw_vzhEgbZVOict6gdnaDT1twJjR/pub?output=csv";
+                let resposta = await fetch(url);
+                let texto = await resposta.text();
+                
+                let linhas = texto.split("\n").map(l => l.split(","));
+                let cabecalho = linhas[0];
+                let conteudo = linhas.slice(1);
+
+                // Atualiza o cabeçalho da tabela
+                document.getElementById("cabecalho").innerHTML = cabecalho.map(h => `<th>${h}</th>`).join("");
+
+                // Atualiza o corpo da tabela
+                document.getElementById("dados").innerHTML = conteudo.map(linha => 
+                    `<tr>${linha.map(cel => `<td>${cel}</td>`).join("")}</tr>`).join("");
+                
+            } catch (error) {
+                console.error("Erro ao buscar dados:", error);
+            }
         }
 
-        atualizarHora();
-        setInterval(atualizarHora, 1000); // Atualiza a hora a cada segundo
+        // Atualiza a cada 10 segundos automaticamente
+        setInterval(atualizarConteudo, 10000);
+
+        // Atualiza ao carregar a página
+        atualizarConteudo();
     </script>
 </body>
 </html>
