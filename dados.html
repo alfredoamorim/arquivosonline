@@ -6,49 +6,58 @@
     <title>Inserir Dados na Planilha</title>
 </head>
 <body>
-    <h2>Inserir Dados</h2>
+    <h2>Inserir Dados na Planilha</h2>
     <input type="text" id="inputData" placeholder="Digite algo">
     <button onclick="enviarDados()">Enviar</button>
     
     <p id="mensagem"></p>
 
     <script>
-        // Permitir envio ao pressionar Enter
         document.getElementById("inputData").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {  
                 enviarDados();
             }
         });
 
-        function enviarDados() {
-            var valor = document.getElementById("inputData").value;
-            if (valor.trim() === "") {
+        async function enviarDados() {
+            var input = document.getElementById("inputData");
+            var mensagem = document.getElementById("mensagem");
+            var valor = input.value.trim();
+
+            if (valor === "") {
                 alert("Por favor, insira um valor.");
                 return;
             }
+
+            mensagem.innerText = "Enviando...";  // Feedback imediato
+            input.disabled = true;  // Desativa o input para evitar múltiplos envios
 
             var url = "https://script.google.com/macros/s/AKfycbwP_BFrYI6IRttbJgjJbQNp1xrO5qpvWq3NbGBMmCMa3finN6c-z1bHxEDQvmtwB3Xq/exec";  // Substitua pelo seu link
             var params = new URLSearchParams();
             params.append("data", valor);
 
-            fetch(url, {
-                method: "POST",
-                body: params
-            })
-            .then(response => response.text())
-            .then(data => {
-                var mensagem = document.getElementById("mensagem");
-                mensagem.innerText = data;
+            try {
+                let response = await fetch(url, {
+                    method: "POST",
+                    body: params
+                });
+
+                let data = await response.text();
+                mensagem.innerText = data === "Sucesso" ? "Dados enviados!" : "Erro ao enviar.";
 
                 // Limpa o input
-                document.getElementById("inputData").value = ""; 
-                
-                // Esconde a mensagem após 1 segundo (1000ms)
+                input.value = ""; 
+
+                // Esconde a mensagem após 1 segundo e reativa o input
                 setTimeout(() => {
                     mensagem.innerText = "";
+                    input.disabled = false;
                 }, 1000);
-            })
-            .catch(error => console.error("Erro:", error));
+            } catch (error) {
+                mensagem.innerText = "Erro ao conectar ao servidor.";
+                console.error("Erro:", error);
+                input.disabled = false;
+            }
         }
     </script>
 </body>
