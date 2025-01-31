@@ -3,14 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inserir Dados</title>
+    <title>Leitor de QR Code + Envio de Dados</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 </head>
 <body>
-    <h2>Inserir Dados 03</h2>
-    <input type="text" id="inputData" placeholder="Digite algo">
+    <h2>Inserir Dados 06</h2>
+
+    <input type="text" id="inputData" placeholder="Digite ou escaneie um QR Code">
     <button onclick="enviarDados()">Enviar</button>
-    
+    <button onclick="abrirCamera()">📷 Ler QR Code</button>
+
     <p id="mensagem"></p>
+
+    <!-- Elementos para câmera -->
+    <video id="video" style="display: none;" autoplay></video>
+    <canvas id="canvas" style="display: none;"></canvas>
 
     <script>
         // Foca automaticamente no campo de entrada ao carregar a página
@@ -34,8 +41,8 @@
                 return;
             }
 
-            mensagem.innerText = "Enviando...";  // Feedback imediato
-            input.disabled = true;  // Desativa o input para evitar múltiplos envios
+            mensagem.innerText = "Enviando...";
+            input.disabled = true;
 
             var url = "https://script.google.com/macros/s/AKfycbwP_BFrYI6IRttbJgjJbQNp1xrO5qpvWq3NbGBMmCMa3finN6c-z1bHxEDQvmtwB3Xq/exec";  // Substitua pelo seu link
             var params = new URLSearchParams();
@@ -50,12 +57,10 @@
                 let data = await response.text();
                 mensagem.innerText = data === "Sucesso" ? "Dados enviados!" : "Erro ao enviar.";
 
-                // Limpa o input e foca novamente na caixa de texto
                 input.value = ""; 
                 input.disabled = false;
-                input.focus(); // Cursor volta automaticamente para a caixa de texto
+                input.focus();
 
-                // Esconde a mensagem após 1 segundo
                 setTimeout(() => {
                     mensagem.innerText = "";
                 }, 1000);
@@ -63,8 +68,44 @@
                 mensagem.innerText = "Erro ao conectar ao servidor.";
                 console.error("Erro:", error);
                 input.disabled = false;
-                input.focus(); // Garante que o cursor volte à caixa de texto mesmo em caso de erro
+                input.focus();
             }
+        }
+
+        function abrirCamera() {
+            let video = document.getElementById("video");
+            let canvas = document.getElementById("canvas");
+            let ctx = canvas.getContext("2d");
+
+            video.style.display = "block";
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(function(stream) {
+                    video.srcObject = stream;
+                    video.play();
+                    scanQRCode(video, canvas, ctx);
+                })
+                .catch(function(error) {
+                    alert("Erro ao acessar a câmera: " + error);
+                });
+        }
+
+        function scanQRCode(video, canvas, ctx) {
+            let scanInterval = setInterval(() => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                let code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                if (code) {
+                    document.getElementById("inputData").value = code.data;
+                    clearInterval(scanInterval);
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.style.display = "none";
+                    enviarDados();
+                }
+            }, 500);
         }
     </script>
 </body>
