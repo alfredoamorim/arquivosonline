@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inserir Dados</title>
+    <title>Inserir Dados na Planilha</title>
 </head>
 <body>
-    <h2>Inserir Dados 02</h2>
+    <h2>Inserir Dados na Planilha</h2>
     <input type="text" id="inputData" placeholder="Digite algo">
     <button onclick="enviarDados()">Enviar</button>
     
     <p id="mensagem"></p>
 
     <script>
+        // Foca automaticamente no campo de entrada ao carregar a página
+        window.onload = function() {
+            document.getElementById("inputData").focus();
+        };
+
         document.getElementById("inputData").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {  
                 enviarDados();
@@ -45,18 +50,20 @@
                 let data = await response.text();
                 mensagem.innerText = data === "Sucesso" ? "Dados enviados!" : "Erro ao enviar.";
 
-                // Limpa o input
+                // Limpa o input e foca novamente na caixa de texto
                 input.value = ""; 
+                input.disabled = false;
+                input.focus(); // Cursor volta automaticamente para a caixa de texto
 
-                // Esconde a mensagem após 1 segundo e reativa o input
+                // Esconde a mensagem após 1 segundo
                 setTimeout(() => {
                     mensagem.innerText = "";
-                    input.disabled = false;
                 }, 1000);
             } catch (error) {
                 mensagem.innerText = "Erro ao conectar ao servidor.";
                 console.error("Erro:", error);
                 input.disabled = false;
+                input.focus(); // Garante que o cursor volte à caixa de texto mesmo em caso de erro
             }
         }
     </script>
