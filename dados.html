@@ -38,7 +38,7 @@
     </style>
 </head>
 <body>
-    <h2>Inserir Dados 09</h2>
+    <h2>Inserir Dados 10</h2>
 
     <input type="text" id="inputData" placeholder="Digite ou escaneie um QR Code">
     <button onclick="enviarDados()">Enviar</button>
@@ -47,7 +47,7 @@
     <p id="mensagem"></p>
 
     <!-- Elementos para câmera -->
-    <video id="video" autoplay></video>
+    <video id="video" autoplay playsinline></video>
     <canvas id="canvas"></canvas>
 
     <script>
@@ -112,6 +112,12 @@
             let canvas = document.getElementById("canvas");
             let ctx = canvas.getContext("2d");
 
+            // Verifica se a câmera já está aberta
+            if (scanning) {
+                stopCamera();
+                return;
+            }
+
             navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "environment" } // Usa a câmera traseira
             }).then(function(stream) {
@@ -130,18 +136,28 @@
         function capturarQR(video, canvas, ctx) {
             if (!scanning) return;
 
+            // Ajusta o canvas para o tamanho do vídeo
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+
+            // Desenha o frame atual do vídeo no canvas
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+            // Captura os dados da imagem do canvas
             let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            let code = jsQR(imageData.data, imageData.width, imageData.height);
 
+            // Tenta decodificar o QR Code
+            let code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
+
+            // Se um QR Code for detectado
             if (code) {
                 document.getElementById("inputData").value = code.data;
                 stopCamera();
                 enviarDados();
             } else {
+                // Continua capturando frames
                 requestAnimationFrame(() => capturarQR(video, canvas, ctx));
             }
         }
