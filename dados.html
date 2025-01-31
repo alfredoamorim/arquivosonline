@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inserir Dados na Planilha</title>
+</head>
+<body>
+    <h2>Inserir Dados na Planilha</h2>
+    <input type="text" id="inputData" placeholder="Digite algo">
+    <button onclick="enviarDados()">Enviar</button>
+    
+    <p id="mensagem"></p>
+
+    <script>
+        function enviarDados() {
+            var valor = document.getElementById("inputData").value;
+            if (valor.trim() === "") {
+                alert("Por favor, insira um valor.");
+                return;
+            }
+
+            var url = "https://script.google.com/macros/s/AKfycby-wkv9awqyyiI8O9Axb3iyBN2o2p2nF_eqE0BlMjy0tuzlW0kYsDsG7PQB7aMSkSc9/exec";  // Substitua pelo seu link
+            var params = new URLSearchParams();
+            params.append("data", valor);
+
+            fetch(url, {
+                method: "POST",
+                body: params
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("mensagem").innerText = data;
+                document.getElementById("inputData").value = ""; 
+            })
+            .catch(error => console.error("Erro:", error));
+        }
+    </script>
+</body>
+</html>
