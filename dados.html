@@ -38,7 +38,7 @@
     </style>
 </head>
 <body>
-    <h2>Inserir Dados 08</h2>
+    <h2>Inserir Dados 09</h2>
 
     <input type="text" id="inputData" placeholder="Digite ou escaneie um QR Code">
     <button onclick="enviarDados()">Enviar</button>
@@ -52,6 +52,7 @@
 
     <script>
         let videoStream = null;
+        let scanning = false;
 
         // Foca no campo ao carregar a página
         window.onload = function() {
@@ -119,14 +120,15 @@
                 video.style.display = "block";
                 video.play();
 
-                setTimeout(() => { capturarQR(video, canvas, ctx); }, 2000); // Aguarda 2s para capturar
+                scanning = true;
+                requestAnimationFrame(() => capturarQR(video, canvas, ctx));
             }).catch(function(error) {
                 alert("Erro ao acessar a câmera: " + error);
             });
         }
 
         function capturarQR(video, canvas, ctx) {
-            if (!videoStream) return;
+            if (!scanning) return;
 
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
@@ -140,8 +142,7 @@
                 stopCamera();
                 enviarDados();
             } else {
-                alert("QR Code não detectado. Tente novamente.");
-                stopCamera();
+                requestAnimationFrame(() => capturarQR(video, canvas, ctx));
             }
         }
 
@@ -151,6 +152,7 @@
                 videoStream.getTracks().forEach(track => track.stop());
             }
             video.style.display = "none";
+            scanning = false;
         }
     </script>
 </body>
