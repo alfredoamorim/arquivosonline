@@ -47,16 +47,23 @@
       font-size: 16px;
       color: #333;
     }
+    #loading-message {
+      margin-top: 5px;
+      font-size: 16px;
+      color: blue;
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h2>Leitor 13</h2>
+  <h2>Leitor 14</h2>
   <div id="qr-reader">
     <video id="qr-video"></video>
   </div>
   <input type="text" id="inputData" placeholder="Dados do QR Code aparecerão aqui">
   <button onclick="enviarDados()">Enviar</button>
   <p id="mensagem"></p>
+  <p id="loading-message">Enviando dados...</p> <!-- Mensagem de carregamento -->
 
   <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
   <script>
@@ -64,12 +71,12 @@
     const video = document.getElementById('qr-video');
     const inputData = document.getElementById('inputData');
     const mensagem = document.getElementById('mensagem');
+    const loadingMessage = document.getElementById("loading-message");
 
-    // Verifica se o navegador suporta acesso à câmera
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then(function(stream) {
         video.srcObject = stream;
-        video.setAttribute("playsinline", true); // Necessário para iOS
+        video.setAttribute("playsinline", true);
         video.play();
         requestAnimationFrame(scanQRCode);
       })
@@ -90,7 +97,7 @@
         });
 
         if (code) {
-          inputData.value = code.data; // Copia o conteúdo do QR Code para o input
+          inputData.value = code.data;
           mensagem.innerText = "QR Code lido com sucesso!";
         } else {
           mensagem.innerText = "Nenhum QR Code encontrado...";
@@ -99,19 +106,16 @@
       requestAnimationFrame(scanQRCode);
     }
 
-    // Foca automaticamente no campo de entrada ao carregar a página
     window.onload = function() {
       inputData.focus();
     };
 
-    // Envia os dados ao pressionar "Enter"
     inputData.addEventListener("keypress", function(event) {
       if (event.key === "Enter") {
         enviarDados();
       }
     });
 
-    // Função para enviar dados
     async function enviarDados() {
       var valor = inputData.value.trim();
 
@@ -120,10 +124,11 @@
         return;
       }
 
-      mensagem.innerText = "Enviando...";  // Feedback imediato
-      inputData.disabled = true;  // Desativa o input para evitar múltiplos envios
+      mensagem.innerText = "Enviando...";
+      loadingMessage.style.display = "block"; // Exibe a mensagem de carregamento
+      inputData.disabled = true;
 
-      var url = "https://script.google.com/macros/s/AKfycbwP_BFrYI6IRttbJgjJbQNp1xrO5qpvWq3NbGBMmCMa3finN6c-z1bHxEDQvmtwB3Xq/exec";  // Substitua pelo seu link
+      var url = "https://script.google.com/macros/s/AKfycbwP_BFrYI6IRttbJgjJbQNp1xrO5qpvWq3NbGBMmCMa3finN6c-z1bHxEDQvmtwB3Xq/exec"; 
       var params = new URLSearchParams();
       params.append("data", valor);
 
@@ -135,13 +140,12 @@
 
         let data = await response.text();
         mensagem.innerText = data === "Sucesso" ? "Dados enviados!" : "Erro ao enviar.";
+        loadingMessage.style.display = "none"; // Oculta a mensagem de carregamento
 
-        // Limpa o input e foca novamente na caixa de texto
         inputData.value = "";
         inputData.disabled = false;
         inputData.focus();
 
-        // Esconde a mensagem após 1 segundo
         setTimeout(() => {
           mensagem.innerText = "";
         }, 1000);
@@ -150,6 +154,7 @@
         console.error("Erro:", error);
         inputData.disabled = false;
         inputData.focus();
+        loadingMessage.style.display = "none"; // Oculta a mensagem de carregamento em caso de erro
       }
     }
   </script>
