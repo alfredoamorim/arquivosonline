@@ -47,22 +47,16 @@
       font-size: 16px;
       color: #333;
     }
-    #totalRegistros {
-      margin-top: 10px;
-      font-size: 16px;
-      color: #333;
-    }
   </style>
 </head>
 <body>
-  <h2>Leitor 12</h2>
+  <h2>Leitor 13</h2>
   <div id="qr-reader">
     <video id="qr-video"></video>
   </div>
   <input type="text" id="inputData" placeholder="Dados do QR Code aparecerão aqui">
   <button onclick="enviarDados()">Enviar</button>
   <p id="mensagem"></p>
-  <p id="totalRegistros">Total de Registros: 0</p>
 
   <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
   <script>
@@ -70,9 +64,6 @@
     const video = document.getElementById('qr-video');
     const inputData = document.getElementById('inputData');
     const mensagem = document.getElementById('mensagem');
-    const totalRegistros = document.getElementById('totalRegistros');
-
-    let registrosCount = 0; // Variável para armazenar o número de registros
 
     // Verifica se o navegador suporta acesso à câmera
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
@@ -103,7 +94,6 @@
           mensagem.innerText = "QR Code lido com sucesso!";
         } else {
           mensagem.innerText = "Nenhum QR Code encontrado...";
-          totalRegistros.innerText = "Total de Registros: " + registrosCount; // Atualiza o total de registros
         }
       }
       requestAnimationFrame(scanQRCode);
@@ -145,11 +135,6 @@
 
         let data = await response.text();
         mensagem.innerText = data === "Sucesso" ? "Dados enviados!" : "Erro ao enviar.";
-
-        if (data === "Sucesso") {
-          registrosCount++; // Incrementa o número de registros
-          totalRegistros.innerText = "Total de Registros: " + registrosCount; // Atualiza o total de registros
-        }
 
         // Limpa o input e foca novamente na caixa de texto
         inputData.value = "";
