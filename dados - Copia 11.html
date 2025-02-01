@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leitor de QR Code e Inserir Dados</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    #qr-reader {
+      width: 300px;
+      height: 300px;
+      border: 2px solid #ccc;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    #inputData {
+      width: 300px;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #mensagem {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h2>Leitor 11</h2>
+  <div id="qr-reader">
+    <video id="qr-video"></video>
+  </div>
+  <input type="text" id="inputData" placeholder="Dados do QR Code aparecerão aqui">
+  <button onclick="enviarDados()">Enviar</button>
+  <p id="mensagem"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+  <script>
+    // Configuração do leitor de QR Code
+    const video = document.getElementById('qr-video');
+    const inputData = document.getElementById('inputData');
+    const mensagem = document.getElementById('mensagem');
+
+    // Verifica se o navegador suporta acesso à câmera
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(function(stream) {
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true); // Necessário para iOS
+        video.play();
+        requestAnimationFrame(scanQRCode);
+      })
+      .catch(function(err) {
+        mensagem.innerText = "Erro ao acessar a câmera: " + err.message;
+      });
+
+    function scanQRCode() {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+
+        if (code) {
+          inputData.value = code.data; // Copia o conteúdo do QR Code para o input
+          mensagem.innerText = "QR Code lido com sucesso!";
+        } else {
+          mensagem.innerText = "Nenhum QR Code encontrado...";
+        }
+      }
+      requestAnimationFrame(scanQRCode);
+    }
+
+    // Foca automaticamente no campo de entrada ao carregar a página
+    window.onload = function() {
+      inputData.focus();
+    };
+
+    // Envia os dados ao pressionar "Enter"
+    inputData.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        enviarDados();
+      }
+    });
+
+    // Função para enviar dados
+    async function enviarDados() {
+      var valor = inputData.value.trim();
+
+      if (valor === "") {
+        alert("Por favor, insira um valor.");
+        return;
+      }
+
+      mensagem.innerText = "Enviando...";  // Feedback imediato
+      inputData.disabled = true;  // Desativa o input para evitar múltiplos envios
+
+      var url = "https://script.google.com/macros/s/AKfycbwP_BFrYI6IRttbJgjJbQNp1xrO5qpvWq3NbGBMmCMa3finN6c-z1bHxEDQvmtwB3Xq/exec";  // Substitua pelo seu link
+      var params = new URLSearchParams();
+      params.append("data", valor);
+
+      try {
+        let response = await fetch(url, {
+          method: "POST",
+          body: params
+        });
+
+        let data = await response.text();
+        mensagem.innerText = data === "Sucesso" ? "Dados enviados!" : "Erro ao enviar.";
+
+        // Limpa o input e foca novamente na caixa de texto
+        inputData.value = "";
+        inputData.disabled = false;
+        inputData.focus();
+
+        // Esconde a mensagem após 1 segundo
+        setTimeout(() => {
+          mensagem.innerText = "";
+        }, 1000);
+      } catch (error) {
+        mensagem.innerText = "Erro ao conectar ao servidor.";
+        console.error("Erro:", error);
+        inputData.disabled = false;
+        inputData.focus();
+      }
+    }
+  </script>
+</body>
+</html>
